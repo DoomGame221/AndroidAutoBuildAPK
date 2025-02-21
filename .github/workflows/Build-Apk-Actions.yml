@@ -1,4 +1,4 @@
-name: Build and Upload Android Project
+name: Build Apk Actions Android Project
 
 on:
   workflow_dispatch:
