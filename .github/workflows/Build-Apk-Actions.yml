@@ -1,0 +1,54 @@
+name: Build Apk Actions Android Project
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant Gradle Wrapper Permission
+        run: chmod +x gradlew
+
+      - name: Build Project with Gradle
+        run: ./gradlew build --stacktrace
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Verify APK Output
+        run: |
+          ls -al app/build/outputs/apk/debug/
+          if [ ! -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
+            echo "Error: APK file not found!"
+            exit 1
+          else
+            echo "APK found, size:"
+            du -h app/build/outputs/apk/debug/app-debug.apk
+          fi
+
+      - name: Rename APK File
+        run: |
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/${{ github.event.repository.name }}.apk
+          ls -al app/build/outputs/apk/debug/
+
+      - name: Upload APK to Actions Artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-apk
+          path: ./app/build/outputs/apk/debug/${{ github.event.repository.name }}.apk
+          retention-days: 30  # จำนวนวันที่เก็บ artifact (ปรับได้)
