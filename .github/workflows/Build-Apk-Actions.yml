@@ -1,4 +1,4 @@
-name: Build Apk Actions Android Project
+name: Build and Upload Android Project
 
 on:
   workflow_dispatch:
@@ -42,11 +42,12 @@ jobs:
         run: |
           mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/${{ github.event.repository.name }}.apk
           ls -al app/build/outputs/apk/debug/
+          file app/build/outputs/apk/debug/${{ github.event.repository.name }}.apk  # ยืนยันว่าเป็น APK
 
       - name: Upload APK to Actions Artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.repository.name }}-apk
+          name: ${{ github.event.repository.name }}  # ชื่อ artifact ไม่ต้องมี .apk
           path: ./app/build/outputs/apk/debug/${{ github.event.repository.name }}.apk
-          retention-days: 30  # จำนวนวันที่เก็บ artifact (ปรับได้)
+          retention-days: 30
