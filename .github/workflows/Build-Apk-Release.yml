@@ -1,4 +1,4 @@
-name: Build and Release Android Project
+name: Build Apk Release Android Project
 
 on:
      workflow_dispatch:
