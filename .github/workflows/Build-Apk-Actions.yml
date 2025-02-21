@@ -50,5 +50,4 @@ jobs:
         with:
           name: ${{ github.event.repository.name }}  # ชื่อ artifact ไม่ต้องมี .apk
           path: ./app/build/outputs/apk/debug/${{ github.event.repository.name }}.apk
-          content_type: application/vnd.android.package-archive
           retention-days: 7
