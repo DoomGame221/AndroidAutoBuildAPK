@@ -1,22 +1,18 @@
 name: Build project after push
 
 on:
-  push:
-    branches:
-      - main  # ปรับเป็น branch ที่ต้องการให้ทำงาน
   issue_comment:
-    types: [created, edited]
+    types: [ created, edited ]
 
 jobs:
   build:
-    if: ${{ github.event.issue.pull_request == false && github.event.issue.number == 1 }}
+    if: ${{ !github.event.issue.pull_request && github.event.issue.number == 1 }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-      - name: Set up JDK 11
+      - name: set up JDK 11
         uses: actions/setup-java@v3
         with:
           java-version: '11'
@@ -27,29 +23,28 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build --stacktrace
+        run: ./gradlew build
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: bash ./gradlew assembleDebug --stacktrace
 
       - name: Check files
         run: ls -al app/build/outputs/apk/debug
 
       - name: Create Release
         id: create_release
-        uses: ncipollo/release-action@v1
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
-          tag: v${{ github.run_number }}
-          name: ${{ github.event.repository.name }} v${{ github.run_number }}
-          body: "Auto-generated release"
-          draft: false
-          prerelease: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ github.run_number }}
+          release_name: ${{ github.event.repository.name }} v${{ github.run_number }}
 
       - name: Upload Release APK
-        uses: actions/upload-release-asset@v1
+        id: upload_release_asset
+        uses: actions/upload-release-asset@v1.0.1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: app/build/outputs/apk/debug/app-debug.apk
