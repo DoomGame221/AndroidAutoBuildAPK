@@ -42,17 +42,13 @@ jobs:
             echo "APK found, size:"
             du -h app/build/outputs/apk/debug/app-debug.apk
           fi
-
-      - name: Upload Release APK
+      - name: Create GitHub Release
         if: success()
         id: create_release
         uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
         with:
           tag_name: v${{ github.run_number }}
           release_name: Release v${{ github.run_number }}
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/build/outputs/apk/debug/app-debug.apk
-          asset_name: ${{ github.event.repository.name }}.apk
-          asset_content_type: application/vnd.android.package-archive
+          files: ./app/build/outputs/apk/debug/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
