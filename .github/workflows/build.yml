@@ -1,10 +1,8 @@
 name: Build and Release Android Project
 
 on:
-  push:
-    branches:
-      - main
-
+     workflow_dispatch:
+     
 permissions:
   contents: write
 
@@ -42,6 +40,12 @@ jobs:
             echo "APK found, size:"
             du -h app/build/outputs/apk/debug/app-debug.apk
           fi
+
+      - name: Rename APK File
+        run: |
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/${{ github.event.repository.name }}.apk
+          ls -al app/build/outputs/apk/debug/
+
       - name: Create GitHub Release
         if: success()
         id: create_release
@@ -49,6 +53,6 @@ jobs:
         with:
           tag_name: v${{ github.run_number }}
           release_name: Release v${{ github.run_number }}
-          files: ./app/build/outputs/apk/debug/app-debug.apk
+          files: ./app/build/outputs/apk/debug/${{ github.event.repository.name }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
