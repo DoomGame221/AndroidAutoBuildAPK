@@ -3,15 +3,18 @@ name: Build project after push
 on:
   push:
     branches:
-      - main  # เปลี่ยนเป็น branch ที่ต้องการ
+      - main  # ปรับเป็น branch ที่ต้องการให้ทำงาน
+  issue_comment:
+    types: [created, edited]
 
 jobs:
   build:
+    if: ${{ github.event.issue.pull_request == false && github.event.issue.number == 1 }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK 11
         uses: actions/setup-java@v3
@@ -24,7 +27,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build --stacktrace
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
@@ -34,19 +37,19 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release v${{ github.run_number }}
-          files: app/build/outputs/apk/debug/app-debug.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: v${{ github.run_number }}
+          name: ${{ github.event.repository.name }} v${{ github.run_number }}
+          body: "Auto-generated release"
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Release APK
-        id: upload_release_asset
-        uses: actions/upload-release-asset@v1.0.1
+        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: app/build/outputs/apk/debug/app-debug.apk
